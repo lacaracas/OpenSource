@@ -1,0 +1,534 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>IDC Open Source</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=Martian+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: barra lateral fija a la izquierda + contenido en retícula de bloques separados por líneas de 2px, como los brochures IDC */
+:root{
+  --bg:#FFFFFF; --fg:#231F20; --rule:#231F20; --muted:#4A4546;
+  --mark:#FFFE00; --mark-fg:#231F20; --mark-top:46%;
+  --band-bg:#231F20; --band-fg:#FFFFFF; --band-mark:#FFFE00;
+  --tile:#F4F4F2;
+  --nav-on-bg:#231F20; --nav-on-fg:#FFFFFF;
+  --c-nidomo:#FFFE00; --c-felulas:#FFFE00; --c-info:#FFFE00;
+  --display:'Inter Tight','Helvetica Neue',Arial,sans-serif;
+  --mono:'Martian Mono',ui-monospace,Menlo,monospace;
+  --side:320px;
+  --head-h:104px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1A1718; --fg:#F2F0EE; --rule:#F2F0EE; --muted:#C9C4C2;
+  --mark:#FFFE00; --mark-fg:#231F20; --mark-top:0%;
+  --band-bg:#F2F0EE; --band-fg:#231F20; --band-mark:#231F20;
+  --tile:#262223; --nav-on-bg:#000000; --nav-on-fg:#FFFFFF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1A1718; --fg:#F2F0EE; --rule:#F2F0EE; --muted:#C9C4C2;
+  --mark:#FFFE00; --mark-fg:#231F20; --mark-top:0%;
+  --band-bg:#F2F0EE; --band-fg:#231F20; --band-mark:#231F20;
+  --tile:#262223; --nav-on-bg:#000000; --nav-on-fg:#FFFFFF; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-0.035em;line-height:.95;font-weight:700}
+p{margin:0;text-wrap:pretty}
+a{color:inherit}
+img{max-width:100%;display:block}
+.label{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;line-height:1.5}
+.dot{width:13px;height:13px;border-radius:50%;display:inline-block;flex-shrink:0;box-shadow:0 0 0 1.5px var(--fg)}
+nav a[aria-current="page"] .dot{box-shadow:none}
+.hl{position:relative;z-index:0;display:inline;padding:0 .12em;color:var(--mark-fg);background:linear-gradient(to bottom,transparent var(--mark-top),var(--mark) var(--mark-top),var(--mark) 94%,transparent 94%);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+
+/* ——— armazón ——— */
+.shell{display:grid;grid-template-columns:var(--side) minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));border-right:2px solid var(--rule);display:flex;flex-direction:column;overflow-y:auto}
+.side-head{height:var(--head-h);padding:0 28px 0 max(28px,env(safe-area-inset-left,0px));border-bottom:2px solid var(--rule);display:flex;flex-direction:column;justify-content:center;gap:18px;flex-shrink:0}
+.logo{color:var(--fg);display:block;width:100%;max-width:none}
+.logo svg{width:100%;height:auto;display:block;fill:currentColor}
+.side-title{font-size:30px;font-weight:700;letter-spacing:-0.04em;line-height:1;text-decoration:none}
+nav{display:flex;flex-direction:column}
+nav a{display:flex;align-items:center;gap:14px;padding:22px 28px 18px max(28px,env(safe-area-inset-left,0px));border-bottom:2px solid var(--rule);text-decoration:none;font-family:var(--mono);font-size:14px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;min-height:72px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+nav a:active{background:var(--nav-on-bg);color:var(--nav-on-fg)}
+nav a .num{margin-left:auto;font-size:12px;opacity:.7}
+nav a:hover{background:var(--nav-on-bg);color:var(--nav-on-fg)}
+nav a:hover .dot,nav a:active .dot{box-shadow:none}
+nav a[aria-current="page"],nav a[aria-current="page"]:hover,nav a[aria-current="page"]:active{background:var(--nav-on-bg);color:var(--nav-on-fg)}
+.side-foot{margin-top:auto;padding:20px 28px 24px max(28px,env(safe-area-inset-left,0px));font-family:var(--mono);font-size:12px;letter-spacing:.06em;line-height:1.6;color:var(--muted)}
+
+main{min-width:0;container-type:inline-size}
+.site-foot{background:var(--mark);color:var(--mark-fg);padding-block:22px 26px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 24px;font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.06em;line-height:1.5}
+main{min-width:0;container-type:inline-size;display:flex;flex-direction:column}
+main > section{flex-grow:1}
+.view[hidden]{display:none!important}
+.pad{padding-left:max(48px,env(safe-area-inset-left,0px));padding-right:max(48px,env(safe-area-inset-right,0px))}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;height:var(--head-h);padding-block:0;border-bottom:2px solid var(--rule)}
+.topbar .who{display:flex;align-items:center;gap:12px}
+.block{border-bottom:2px solid var(--rule)}
+
+/* ——— portada ——— */
+.hero{padding-block:72px 64px;display:flex;flex-direction:column;gap:32px}
+.hero h1{font-size:clamp(44px,6.6vw,96px);max-width:14ch}
+.hero .def{font-size:clamp(22px,2.4vw,32px);line-height:1.24;letter-spacing:-0.015em;max-width:36ch;font-weight:400}
+.defs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.story{padding-block:44px 48px}
+.story h2{font-size:clamp(32px,3.6vw,52px)}
+.story p{font-size:20px;line-height:1.42;max-width:58ch}
+@container (max-width:680px){.story{grid-template-columns:minmax(0,1fr)}}
+.defi{padding:32px 32px 36px;border-right:2px solid var(--rule);display:flex;flex-direction:column;gap:14px;min-width:0}
+.defi:first-child{padding-left:max(48px,env(safe-area-inset-left,0px))}
+.defi:last-child{border-right:0}
+.defi h2{font-size:clamp(26px,2.4vw,34px);line-height:1.02}
+.defi p{font-size:18px;line-height:1.45;color:var(--muted)}
+@container (max-width:780px){.defs{grid-template-columns:minmax(0,1fr)}.defi{border-right:0;border-bottom:2px solid var(--rule);padding-left:max(16px,env(safe-area-inset-left,0px))!important}.defi:last-child{border-bottom:0}}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{display:flex;flex-direction:column;text-decoration:none;border-right:2px solid var(--rule);min-width:0}
+.card:last-child{border-right:0}
+.card .ph{aspect-ratio:4/3;border-bottom:2px solid var(--rule);background:var(--tile);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.card .ph img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+.card:hover .ph img{transform:scale(1.03)}
+.card .ph .soon{font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.card .body{padding:24px 28px 30px;display:flex;flex-direction:column;gap:12px;flex-grow:1}
+.card .row{display:flex;align-items:center;gap:10px}
+.card h2{font-size:34px}
+.card p{font-size:17px;color:var(--muted)}
+.card .go{margin-top:auto;padding-top:10px;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.card:hover .go span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px}
+.band{background:var(--band-bg);color:var(--band-fg);padding-block:40px;display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:24px 48px}
+.band .label{color:var(--band-mark)}
+.band p{font-size:22px;font-weight:300;line-height:1.38;max-width:52ch}
+
+/* ——— Nidomo ——— */
+.n-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.n-hero .txt{padding-block:56px 48px;display:flex;flex-direction:column;justify-content:space-between;gap:40px;border-right:2px solid var(--rule)}
+.n-hero h1{font-size:clamp(48px,6.4vw,96px)}
+.n-hero .tag{font-size:clamp(22px,2.2vw,30px);line-height:1.2;letter-spacing:-0.015em}
+.n-hero .credit{display:flex;flex-direction:column;gap:6px}
+.n-hero .photo{min-height:420px;background:var(--tile)}
+.n-hero .photo img{width:100%;height:100%;object-fit:cover}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.stat{padding:22px 24px 26px;border-right:2px solid var(--rule);display:flex;flex-direction:column;gap:6px}
+.stat:first-child{padding-left:max(48px,env(safe-area-inset-left,0px))}
+.stat:last-child{border-right:0}
+.stat b{font-size:54px;font-weight:700;letter-spacing:-0.04em;line-height:1;font-variant-numeric:tabular-nums}
+.sec-head{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:16px 48px;padding-block:48px 40px}
+.sec-head h2{font-size:clamp(34px,4vw,60px)}
+.sec-head .lead{font-size:21px;line-height:1.4;max-width:56ch;margin-top:18px;font-weight:400}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-top:2px solid var(--rule)}
+.split figure{margin:0;border-right:2px solid var(--rule);display:flex;flex-direction:column}
+.split figure:last-child{border-right:0}
+.split figure img{width:100%;aspect-ratio:3/4;object-fit:cover}
+.split figure.contain img{object-fit:contain;background:#FFFFFF;aspect-ratio:4/3}
+figcaption{padding:14px 24px;border-top:2px solid var(--rule);font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.parts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:2px solid var(--rule)}
+.part{border-right:2px solid var(--rule);display:flex;flex-direction:column;min-width:0}
+.part:last-child{border-right:0}
+.part .im{aspect-ratio:1/1;border-bottom:2px solid var(--rule);background:#FFFFFF;overflow:hidden}
+.part .im img{width:100%;height:100%;object-fit:cover}
+.part .im.contain img{object-fit:contain;padding:12px}
+.part .txt{padding:22px 24px 28px;display:flex;flex-direction:column;gap:8px}
+.part h3{font-size:28px}
+.part p{font-size:17px;color:var(--muted)}
+.steps{border-top:2px solid var(--rule)}
+.step{display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,300px);border-bottom:2px solid var(--rule);align-items:stretch}
+.step:last-child{border-bottom:0}
+.step .n{padding:26px 0 26px max(48px,env(safe-area-inset-left,0px));font-family:var(--mono);font-size:18px;font-weight:500}
+.step .c{padding:24px 32px 28px 0;display:flex;flex-direction:column;gap:12px}
+.step h3{font-size:28px}
+.step ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:17px;line-height:1.45}
+.step .d{border-left:2px solid var(--rule);background:#FFFFFF;display:flex;align-items:center;justify-content:center}
+.step .d img{width:100%;height:100%;max-height:230px;object-fit:contain;padding:12px}
+.step .d.empty{background:var(--tile)}
+.notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--rule)}
+.notes > div{padding-block:28px 32px;display:flex;flex-direction:column;gap:12px}
+.notes > div:first-child{border-right:2px solid var(--rule)}
+.notes > div:last-child{padding-left:32px}
+.notes ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.proc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--rule)}
+.proc figure{margin:0;border-right:2px solid var(--rule);display:flex;flex-direction:column;min-width:0}
+.proc figure:last-child{border-right:0}
+.proc img{width:100%;aspect-ratio:3/4;object-fit:cover}
+.proc img.contain{object-fit:contain;background:#FFFFFF}
+.proc .t{padding:18px 20px 22px;border-top:2px solid var(--rule);display:flex;flex-direction:column;gap:6px}
+.proc .t b{font-size:21px;letter-spacing:-0.02em}
+.proc .t span{font-size:16px;color:var(--muted)}
+.open{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);border-top:2px solid var(--rule)}
+.open .list{border-right:2px solid var(--rule)}
+.open .item{display:grid;grid-template-columns:72px minmax(0,1fr);gap:4px;padding:20px 24px 22px 0;border-bottom:2px solid var(--rule)}
+.open .item:last-child{border-bottom:0}
+.open .item .k{padding-left:max(48px,env(safe-area-inset-left,0px));font-family:var(--mono);font-weight:500}
+.open .item b{font-size:22px;letter-spacing:-0.02em;display:block}
+.open .cost{padding:32px 40px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.open .cost .big{font-size:clamp(90px,11vw,160px);font-weight:700;letter-spacing:-0.06em;line-height:.85}
+.open .cost p{font-size:21px}
+.files{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:2px solid var(--rule)}
+.file{padding:22px 24px 26px;border-right:2px solid var(--rule);display:flex;flex-direction:column;gap:8px}
+.file:first-child{padding-left:max(48px,env(safe-area-inset-left,0px))}
+.file:last-child{border-right:0}
+.file b{font-size:21px;letter-spacing:-0.02em}
+.file .state{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.join{background:var(--band-bg);color:var(--band-fg);padding-block:52px 56px;display:flex;flex-direction:column;gap:22px}
+.join .label{color:var(--band-mark)}
+.join h2{font-size:clamp(36px,5vw,72px);max-width:16ch}
+.join p{font-size:22px;font-weight:300}
+.chips{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.chips span{border:2px solid var(--band-fg);padding:12px 22px;font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+
+/* ——— próximamente ——— */
+.soon-wrap{padding-block:72px 80px;display:flex;flex-direction:column;gap:28px;border-bottom:2px solid var(--rule)}
+.soon-wrap h1{font-size:clamp(52px,8vw,120px)}
+.soon-wrap p{font-size:22px;max-width:40ch;line-height:1.35}
+.back{display:inline-flex;align-items:center;gap:12px;align-self:flex-start;text-decoration:none;background:var(--band-bg);color:var(--band-fg);padding:18px 28px;font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;min-height:44px}
+
+.f-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.f-hero .soon-wrap{border-right:2px solid var(--rule);justify-content:center}
+.f-photo{margin:0;min-height:420px;background:var(--tile)}
+.f-photo img{width:100%;height:100%;object-fit:cover}
+@container (max-width:780px){.f-hero{grid-template-columns:minmax(0,1fr)}.f-hero .soon-wrap{border-right:0;border-bottom:2px solid var(--rule)!important}.f-photo{min-height:0;aspect-ratio:5/4}}
+.flist{border-bottom:2px solid var(--rule)}
+.frow{display:grid;grid-template-columns:110px minmax(0,1fr) 64px;align-items:center;min-height:88px;border-bottom:2px solid var(--rule);text-decoration:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.frow:last-child{border-bottom:0}
+.frow:hover,.frow:active{background:var(--tile)}
+.frow .k{padding-left:max(48px,env(safe-area-inset-left,0px));font-family:var(--mono);font-weight:500}
+.frow .t{display:flex;flex-direction:column;gap:2px;padding-block:18px}
+.frow b{font-size:26px;letter-spacing:-0.02em}
+.frow .label{color:var(--muted);font-size:12px}
+.frow .go{font-size:24px;text-align:center}
+@container (max-width:680px){.frow{grid-template-columns:56px minmax(0,1fr) 48px}.frow .k{padding-left:max(16px,env(safe-area-inset-left,0px))}}
+.pagefoot{padding-block:22px 28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--muted)}
+
+/* ——— responsive ——— */
+@container (max-width:900px){
+  .proc{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .proc figure:nth-child(2){border-right:0}
+  .proc figure:nth-child(-n+2){border-bottom:2px solid var(--rule)}
+  .step{grid-template-columns:90px minmax(0,1fr) minmax(0,220px)}
+}
+/* Barra lateral: siempre a la izquierda en pantallas horizontales; solo pasa arriba en teléfonos en vertical */
+@media (orientation:landscape) and (max-width:1180px){:root{--side:260px}.side-head{padding-left:max(22px,env(safe-area-inset-left,0px));padding-right:22px}nav a{padding-left:max(22px,env(safe-area-inset-left,0px));padding-right:18px}}
+@media (orientation:portrait) and (max-width:760px){
+  .shell{display:block}
+  .side{position:static;height:auto;border-right:0;border-bottom:2px solid var(--rule)}
+  .side-head{height:auto;flex-direction:row;align-items:center;justify-content:space-between;padding:18px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px))}
+  .logo{max-width:210px}
+  .side-title{font-size:20px;text-align:right}
+  nav{flex-direction:row;flex-wrap:wrap}
+  nav a{flex:1 1 50%;padding:14px 16px;border-right:2px solid var(--rule);font-size:12px}
+  nav a .num{display:none}
+  .side-foot{padding:14px 16px}
+  .side-head{flex-wrap:wrap}
+}
+@container (max-width:680px){
+  .pad,.stat:first-child,.step .n,.open .item .k,.file:first-child{padding-left:max(16px,env(safe-area-inset-left,0px))}
+  .pad{padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .cards,.n-hero,.split,.parts,.notes,.open,.files{grid-template-columns:minmax(0,1fr)}
+  .card,.split figure,.part,.file,.n-hero .txt,.open .list,.notes > div:first-child{border-right:0;border-bottom:2px solid var(--rule)}
+  .card:last-child,.part:last-child,.file:last-child,.split figure:last-child{border-bottom:0}
+  .notes > div:last-child{padding-left:max(16px,env(safe-area-inset-left,0px))}
+  .n-hero .photo{min-height:0;aspect-ratio:4/5}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat:nth-child(2){border-right:0}
+  .stat:nth-child(-n+2){border-bottom:2px solid var(--rule)}
+  .stat:nth-child(3){padding-left:max(16px,env(safe-area-inset-left,0px))}
+  .stat b{font-size:42px}
+  .sec-head,.band{grid-template-columns:minmax(0,1fr)}
+  .step{grid-template-columns:56px minmax(0,1fr)}
+  .step .c{padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .step .d{grid-column:1/-1;border-left:0;border-top:2px solid var(--rule)}
+  .open .cost{padding:28px max(16px,env(safe-area-inset-right,0px)) 32px max(16px,env(safe-area-inset-left,0px))}
+  .file{padding-left:max(16px,env(safe-area-inset-left,0px))}
+
+}
+@container (max-width:480px){
+  .proc{grid-template-columns:minmax(0,1fr)}
+  .proc figure{border-right:0;border-bottom:2px solid var(--rule)}
+}
+@media (orientation:portrait) and (max-width:520px){
+  .side-head{flex-direction:column;align-items:flex-start;gap:10px}
+  .side-title{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){.card .ph img{transition:none}}
+</style>
+
+<div class="shell">
+  <aside class="side">
+    <div class="side-head">
+      <a class="logo" href="#inicio" aria-label="Instituto de Diseño de Caracas: inicio"><svg aria-hidden="true" focusable="false" id="IDENTIFICADOR" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4635.44 600">
+  <g id="ID._NEGRO" data-name="ID. NEGRO">
+    <g>
+      <g>
+        <polygon points="4044.06 4.3 4044.06 398.56 4241.16 201.46 4438.3 201.46 4438.3 142.3 4635.44 142.3 4635.44 63.44 4438.3 63.44 4438.3 4.3 4044.06 4.3"></polygon>
+        <polygon points="4044.06 595.7 4241.16 595.7 4044.06 398.56 4044.06 595.7"></polygon>
+        <polygon points="4241.16 398.56 4438.32 595.7 4635.44 595.7 4635.44 398.56 4438.32 398.56 4339.74 300 4241.16 398.56"></polygon>
+      </g>
+      <g>
+        <polygon points="0 4.3 0 53.44 49.12 53.44 49.12 270.42 98.28 270.42 98.28 4.3 0 4.3"></polygon>
+        <rect x="907.6" y="4.3" width="49.14" height="266.12"></rect>
+        <polygon points="645.14 4.3 645.14 53.44 732.1 53.44 732.1 270.42 781.24 270.42 781.24 53.44 868.2 53.44 868.2 4.3 645.14 4.3"></polygon>
+        <path d="M1440.56,159.2c0,36.66-29.74,66.38-66.4,66.38s-66.38-29.72-66.38-66.38V4.3h-49.16v154.88c0,63.82,51.74,115.54,115.54,115.54s115.54-51.72,115.54-115.54V4.3h-49.14v154.9Z"></path>
+        <polygon points="996.16 4.3 996.16 53.44 1083.12 53.44 1083.12 270.42 1132.26 270.42 1132.26 53.44 1219.22 53.44 1219.22 4.3 996.16 4.3"></polygon>
+        <polygon points="1529.1 4.3 1529.1 53.44 1616.06 53.44 1616.06 270.44 1665.22 270.44 1665.22 53.44 1752.18 53.44 1752.18 4.3 1529.1 4.3"></polygon>
+        <path d="M2094.72,245.86V28.88h79.82c55.3,0,100.12,44.82,100.12,100.12v16.76c0,55.28-44.82,100.12-100.12,100.12h-79.82v-.02ZM2301.56,145.4v-16.06c0-69.04-55.98-125.02-125.02-125.02h-106.4v266.1h106.4c69.06,0,125.02-55.96,125.02-125.02"></path>
+        <rect x="2824.26" y="4.3" width="49.14" height="266.12"></rect>
+        <path d="M2539.34,389.18l37.16,90.14h-74.34l37.16-90.14h.02ZM2514.76,329.58l-109.7,266.12h49.16l29.18-70.84h111.88l29.2,70.84h49.14l-109.72-266.12h-49.14,0Z"></path>
+        <path d="M3055.46,389.18l37.16,90.14h-74.32l37.16-90.14h0ZM3030.88,329.58l-109.72,266.12h49.16l29.18-70.84h111.86l29.22,70.84h49.14l-109.7-266.12h-49.14Z"></path>
+        <path d="M3572,389.18l37.16,90.14h-74.34l37.16-90.14h.02ZM3547.42,329.58l-109.72,266.12h49.16l29.18-70.84h111.88l29.2,70.84h49.14l-109.7-266.12h-49.14,0Z"></path>
+        <path d="M2808.48,454.08h-65.7v-75.36h65.7c12.48,0,58.28-6.2,58.28,37.68,0,29.38-20.52,36.32-37.84,37.68-8.54.68-16.32,0-20.42,0M2867.94,494.06c27.22-14.9,45.64-43.62,45.64-76.58,0-48.3-39.56-87.44-88.38-87.44l-16.72-.48h-114.82v266.14h49.12v-92.46l75.98-.04,43.56,92.5h56.24l-50.64-101.64h.02Z"></path>
+        <polygon points="3162.46 4.3 3162.46 53.44 3162.46 112.8 3162.46 161.94 3162.46 221.28 3162.46 270.42 3365 270.42 3365 221.28 3211.6 221.28 3211.6 161.94 3365 161.94 3365 112.8 3211.6 112.8 3211.6 53.44 3365 53.44 3365 4.3 3162.46 4.3"></polygon>
+        <polygon points="321.78 4.3 321.78 189.98 186.82 4.3 137.68 4.3 137.68 270.42 186.82 270.42 186.82 80.98 321.78 270.42 370.92 270.42 370.92 4.3 321.78 4.3"></polygon>
+        <path d="M1988.52,138.62c0,48.04-38.94,86.96-86.98,86.96s-86.94-38.92-86.94-86.96v-2.52c0-48.04,38.92-86.96,86.94-86.96s86.98,38.92,86.98,86.96v2.52ZM2037.66,138.62v-2.52C2037.66,60.94,1976.74,0,1901.56,0s-136.1,60.94-136.1,136.1v2.52c0,75.16,60.94,136.1,136.1,136.1s136.12-60.94,136.12-136.1"></path>
+        <path d="M3896.34,138.62c0,48.04-38.94,86.96-86.96,86.96s-86.96-38.92-86.96-86.96v-2.52c0-48.02,38.92-86.96,86.96-86.96s86.96,38.94,86.96,86.96v2.52ZM3809.38,0h0C3734.22,0,3673.26,60.94,3673.26,136.1v2.52c0,75.16,60.94,136.12,136.12,136.12s136.1-60.94,136.1-136.12v-2.52c0-75.16-60.94-136.1-136.1-136.1"></path>
+        <polygon points="3521.04 4.3 3521.04 53.44 3588.5 53.44 3588.5 189.98 3453.56 4.3 3404.4 4.3 3404.4 270.42 3453.56 270.42 3453.56 80.98 3588.5 270.42 3637.66 270.42 3637.66 4.3 3521.04 4.3"></polygon>
+        <path d="M526,113.1c-39.32-9.98-61.72-13.42-67.02-30.7-5.84-19.04,14.46-35.9,37.08-35.9,21.32,0,46.72-2.7,61.7,9.24,15,11.94,18.04,27.42,18.04,34.54h47.76S625.38,1,510.94,1c-89.58,0-97.54,60.66-98.66,71.18-.7,6.48-3.08,26.22,12.76,44.88,12.6,14.84,36.32,28.24,87.48,39.4,39.32,9.98,63.32,15.66,68.6,32.94,5.84,19.04-17.26,36.78-39.76,38.7-23.2,1.96-53.86.58-71.7-12.66-15.38-11.44-17.9-28.74-17.9-37.2h-48.54s4.72,96.82,113.82,96.82c17.5,0,35.2-1.62,52.04-6.62,11.68-3.46,22.96-8.64,32.58-16.18,7.1-5.58,13.18-12.42,17.7-20.24,8.66-15.02,11.24-33.56,8.38-50.54-.82-4.88-2.14-9.36-4.16-13.84-8.84-19.42-32.52-40.64-97.54-54.56"></path>
+        <path d="M2746.52,137.36c0,46.36-37.58,83.92-83.92,83.92h-54.4V53.44h54.4c46.36,0,83.92,37.56,83.92,83.92M2795.66,147.28v-19.84c0-68.02-55.14-123.14-123.14-123.14h-113.48v266.12h113.48c68.02,0,123.14-55.12,123.14-123.14"></path>
+        <path d="M2360,502.6c-19.64,59.28-85.34,49.66-85.34,49.66-47.4-6.16-70.2-40.14-70.2-89.64s22.8-83.46,70.2-89.64c0,0,65.68-9.62,85.34,49.66h47.64c-16.06-56-65-96.74-122.88-96.74-74.46,0-128.46,61.2-128.46,136.72s52.88,136.72,128.46,136.72c57.88,0,106.82-40.72,122.88-96.74h-47.64Z"></path>
+        <path d="M3304.1,372.58s66-9.66,85.72,49.9h47.88c-16.14-56.28-65.32-97.22-123.46-97.22-74.8,0-129.06,61.5-129.06,137.36s53.12,137.38,129.06,137.38c58.16,0,107.3-40.92,123.46-97.2h-47.88c-19.72,59.56-85.72,49.9-85.72,49.9-47.64-6.2-70.54-40.34-70.54-90.06s22.9-83.84,70.54-90.04"></path>
+        <polygon points="2325.54 4.32 2325.54 270.42 2519.4 270.42 2519.4 245.88 2350.1 245.88 2350.1 149.68 2519.4 149.68 2519.4 125.1 2350.1 125.1 2350.1 28.9 2519.4 28.9 2519.4 4.32 2325.54 4.32"></polygon>
+        <path d="M1879.3,471c0,55.3-44.82,100.12-100.12,100.12h-79.82v-216.98h79.82c55.28,0,100.12,44.82,100.12,100.12v16.76-.02ZM1781.18,329.56h-106.4v266.12h106.4c69.04,0,125.02-55.98,125.02-125.02v-16.06c0-69.04-55.98-125.02-125.02-125.02"></path>
+        <polygon points="1930.2 329.56 1930.2 595.38 2124.06 595.38 2124.06 570.78 1954.78 570.78 1954.78 474.9 2124.06 474.9 2124.06 450.34 1954.78 450.34 1954.78 354.14 2124.06 354.14 2124.06 329.56 1930.2 329.56"></polygon>
+        <path d="M3026.92,113.1c-39.32-9.98-61.72-13.42-67.04-30.7-5.84-19.04,14.48-35.9,37.08-35.9,21.34,0,46.74-2.7,61.72,9.24,15,11.94,18.04,27.42,18.04,34.54h47.76s1.84-89.28-112.62-89.28c-89.58,0-97.54,60.66-98.68,71.18-.68,6.48-3.06,26.22,12.76,44.88,12.6,14.84,36.3,28.24,87.48,39.4,39.32,9.98,63.3,15.66,68.6,32.94,5.84,19.04-17.26,36.78-39.78,38.7-23.18,1.96-53.86.58-71.68-12.66-15.38-11.44-17.9-28.74-17.9-37.2h-48.54s4.72,96.82,113.82,96.82c17.5,0,35.2-1.62,52.04-6.62,11.68-3.46,22.96-8.64,32.58-16.18,7.1-5.58,13.18-12.42,17.7-20.24,8.66-15.02,11.24-33.56,8.38-50.54-.82-4.88-2.14-9.36-4.16-13.84-8.84-19.42-32.52-40.64-97.54-54.56"></path>
+        <path d="M3825.14,437.78c-39.32-9.98-61.72-13.42-67.02-30.7-5.84-19.04,14.46-35.9,37.08-35.9,21.32,0,46.72-2.7,61.7,9.24,15,11.94,18.04,27.42,18.04,34.54h47.76s1.84-89.28-112.62-89.28c-89.58,0-97.54,60.66-98.66,71.18-.7,6.48-3.08,26.22,12.76,44.88,12.6,14.84,36.32,28.24,87.48,39.4,39.32,9.98,63.32,15.66,68.6,32.94,5.84,19.04-17.26,36.78-39.76,38.68-23.2,1.98-53.86.6-71.7-12.64-15.38-11.44-17.9-28.74-17.9-37.2h-48.54s4.72,96.82,113.82,96.82c17.5,0,35.2-1.62,52.04-6.62,11.68-3.46,22.96-8.64,32.58-16.18,7.1-5.58,13.18-12.42,17.7-20.24,8.66-15.02,11.24-33.56,8.38-50.54-.82-4.88-2.14-9.36-4.16-13.84-8.84-19.42-32.52-40.64-97.54-54.56"></path>
+      </g>
+    </g>
+  </g>
+</svg></a>
+    </div>
+    <nav aria-label="Proyectos">
+      <a href="#inicio" data-view="inicio"><span class="dot" style="background:var(--c-nidomo)"></span><span>Inicio</span></a>
+      <a href="#nidomo" data-view="nidomo"><span class="dot" style="background:var(--c-nidomo)"></span><span>Refugio Nidomo</span><span class="num">01</span></a>
+      <a href="#ferulas" data-view="ferulas"><span class="dot" style="background:var(--c-felulas)"></span><span>Férulas</span><span class="num">02</span></a>
+      <a href="#infografias" data-view="infografias"><span class="dot" style="background:var(--c-info)"></span><span>Infografías</span><span class="num">03</span></a>
+    </nav>
+  </aside>
+
+  <main>
+    <!-- ================= INICIO ================= -->
+    <section class="view" id="v-inicio" aria-label="Inicio">
+      <div class="topbar pad label"><span>IDC Open Source</span><span>Diseño en abierto</span></div>
+      <div class="hero pad block">
+        <span class="label">IDC Open Source</span>
+        <h1>¿Qué es una solución <span class="hl">Open Source</span>?</h1>
+        <p class="def">Una forma de diseñar e innovar sin cerrar puertas: los planos, gráficos y archivos se comparten libremente en la web para que cualquier persona pueda transferir y fabricar la solución donde esté.</p>
+      </div>
+      <div class="story pad block">
+        <div><p>Tras el terremoto del 24 de junio, estudiantes y profesores del IDC respondieron a la emergencia publicando sus diseños en abierto. Así, sus refugios y herramientas llegaron más allá de nuestras fronteras y se fabricaron y pusieron en uso en Colombia. Es la prueba de que el diseño humaniza la tecnología: transforma realidades desde cualquier lugar.</p></div>
+      </div>
+      <div class="cards block">
+        <a class="card" href="#nidomo">
+          <div class="ph"><img src="img/portada.jpg" alt="Refugio Nidomo armado, con su puerta y ventana"></div>
+          <div class="body">
+            <div class="row label"><span class="dot" style="background:var(--c-nidomo)"></span>01 · Refugio</div>
+            <h2>Refugio Nidomo</h2>
+            <p>Un refugio de transición para 4 o 5 personas que se arma en 30 minutos, sin herramientas.</p>
+            <div class="go"><span>Ver proyecto</span> →</div>
+          </div>
+        </a>
+        <a class="card" href="#ferulas">
+          <div class="ph"><img src="img/ferula-tobillo.jpg" alt="Férula de tobillo impresa en 3D"></div>
+          <div class="body">
+            <div class="row label"><span class="dot" style="background:var(--c-felulas)"></span>02 · Impresión 3D</div>
+            <h2>Férulas</h2>
+            <p>Desarrolladas pensando en las que no se consiguen tan fácilmente: collarín y férulas de rodilla y de tobillo para imprimir en 3D.</p>
+            <div class="go"><span>Ver proyecto</span> →</div>
+          </div>
+        </a>
+        <a class="card" href="#infografias">
+          <div class="ph"><img src="img/infografia-aplastamiento.jpg" alt="Infografía sobre el síndrome de aplastamiento"></div>
+          <div class="body">
+            <div class="row label"><span class="dot" style="background:var(--c-info)"></span>03 · Gráficos</div>
+            <h2>Infografías</h2>
+            <p>Piezas visuales de las campañas del terremoto, listas para compartir en redes o imprimir.</p>
+            <div class="go"><span>Ver infografías</span> →</div>
+          </div>
+        </a>
+      </div>
+      <div class="band pad">
+        <span class="label">Libre y comunitario</span>
+        <p>Cada proyecto publica lo necesario para fabricarlo: planos, archivos de impresión 3D, patrones y manuales de armado. Cualquier persona, en cualquier lugar, puede descargarlos, construirlos y mejorarlos.</p>
+      </div>
+    </section>
+
+    <!-- ================= NIDOMO ================= -->
+    <section class="view" id="v-nidomo" aria-label="Refugio Nidomo" hidden>
+      <div class="topbar pad label"><div class="who"><span class="dot" style="background:var(--c-nidomo)"></span><span>Refugio Nidomo</span></div><span>Versión 002</span></div>
+
+      <div class="n-hero block">
+        <div class="txt pad">
+          <div style="display:flex;flex-direction:column;gap:22px">
+            <span class="label">Presentación del proyecto</span>
+            <h1>Refugio Nidomo</h1>
+            <p class="tag">Geometría intuitiva para el <span class="hl">bienestar común</span>.</p>
+          </div>
+          <div class="credit label"><span>Kenco × Instituto de Diseño de Caracas</span><span>Diseñado y fabricado en Caracas · 100% venezolano</span></div>
+        </div>
+        <div class="photo"><img src="img/portada.jpg" alt="Exterior del Refugio Nidomo cubierto con lona blanca"></div>
+      </div>
+
+      <div class="stats block">
+        <div class="stat"><b>2</b><span class="label">personas lo arman</span></div>
+        <div class="stat"><b>30</b><span class="label">minutos de armado</span></div>
+        <div class="stat"><b>0</b><span class="label">herramientas</span></div>
+        <div class="stat"><b>4–5</b><span class="label">personas lo habitan</span></div>
+      </div>
+
+      <!-- desafío + inspiración -->
+      <div class="block">
+        <div class="sec-head pad">
+          <span class="label">El desafío</span>
+          <div><h2>La naturaleza nos enseña sobre resiliencia.</h2>
+          <p class="lead">Cuando ocurrió el doblete sísmico, la necesidad de refugios temporales se volvió un gran desafío. Ver a tantas familias a la intemperie nos movilizó.</p></div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="sec-head pad">
+          <span class="label">La inspiración</span>
+          <div><h2>Nido + domo = Nidomo</h2>
+          <p class="lead">El concepto nos recordó la forma en que el ave hornero construye su nido: una cúpula cerrada que protege a quienes la habitan. El resultado es un refugio de transición ventilado, resistente a la intemperie y con altura real para albergar dignamente a 4 o 5 personas.</p></div>
+        </div>
+        <div class="split">
+          <figure><img src="img/interior.jpg" alt="Dos personas sentadas dentro del domo, con altura de sobra"><figcaption>Desde adentro</figcaption></figure>
+          <figure><img src="img/resultado-int.jpg" alt="Interior del refugio visto desde el suelo hacia la puerta"><figcaption>Interior terminado</figcaption></figure>
+        </div>
+      </div>
+
+      <!-- partes -->
+      <div class="block">
+        <div class="sec-head pad">
+          <span class="label">Partes</span>
+          <div><h2>Tres capas, un sistema.</h2></div>
+        </div>
+        <div class="parts">
+          <div class="part"><div class="im"><img src="img/esqueleto.jpg" alt="Esqueleto de tubos de PVC durante el armado"></div>
+            <div class="txt"><span class="label">01</span><h3>Tubos</h3><p>PVC de 1/2": 46 tubos A de 116 cm y 4 tubos B de 96 cm.</p></div></div>
+          <div class="part"><div class="im contain"><img src="img/nodos.jpg" alt="Lámina con los nueve tipos de nodos, de la a a la g"></div>
+            <div class="txt"><span class="label">02</span><h3>Nodos</h3><p>9 tipos (de la a a la g), 23 piezas impresas en 3D y numeradas.</p></div></div>
+          <div class="part"><div class="im"><img src="img/domo.jpg" alt="Domo cubierto con la lona"></div>
+            <div class="txt"><span class="label">03</span><h3>Lona</h3><p>Lonas publicitarias recicladas: base, intermedia, techo, puerta y ventana.</p></div></div>
+        </div>
+      </div>
+
+      <!-- manual -->
+      <div class="block">
+        <div class="sec-head pad">
+          <span class="label">Manual de armado</span>
+          <div><h2>Listo en <span class="hl">30 minutos</span>.</h2>
+          <p class="lead">Todas las uniones son a presión, sin tornillos. Alinea el tubo con el nodo y empuja hasta el tope. Los números de cada nodo indican cuál es el siguiente: el 1 conecta con el 1, el 2 con el 2.</p></div>
+        </div>
+        <div class="steps">
+          <div class="step"><div class="n">01</div><div class="c"><span class="label">Fase 1</span><h3>Base</h3><ol><li>Despeja el suelo.</li><li>Une los 8 nodos a con 8 tubos A por el agujero n.º 1.</li><li>Comprueba que el anillo esté cerrado y nivelado.</li><li>Extiende la lona de la base dentro de los tubos.</li></ol></div><div class="d"><img src="img/fase1.jpg" alt="Anillo octogonal de la base"></div></div>
+          <div class="step"><div class="n">02</div><div class="c"><span class="label">Fase 2</span><h3>Puerta</h3><ol><li>Inserta 16 tubos A en los agujeros n.º 2 de los nodos a.</li><li>Ubica los nodos b1 y b2, que marcan la puerta.</li></ol></div><div class="d"><img src="img/fase2.jpg" alt="Primera corona de triángulos sobre la base"></div></div>
+          <div class="step"><div class="n">03</div><div class="c"><span class="label">Fase 3</span><h3>Capa intermedia</h3><ol><li>Coloca los nodos c1 y c2 de forma intercalada: después de b1 va un c1, luego un c2, hasta cerrar en b2.</li><li>Presenta la lona intermedia como una franja alrededor.</li><li>Pasa 8 tubos A por los bolsillos de la lona e insértalos en el agujero n.º 3 de los nodos b y c.</li><li>Inserta 10 tubos A en los agujeros n.º 4 y P, y coloca los 4 nodos d.</li><li>Inserta 4 tubos A en los agujeros n.º 5 de los nodos b; antes de poner el tubo sobre la puerta, pasa por él el nodo g.</li></ol></div><div class="d empty"></div></div>
+          <div class="step"><div class="n">04</div><div class="c"><span class="label">Fase 4</span><h3>Techo</h3><ol><li>Inserta un tubo A en el agujero P del nodo g y conéctalo con los tubos de la puerta.</li><li>Arma la cúpula aparte con los 4 tubos B y el nodo e, y luego insértala en el agujero n.º 6 de los nodos d.</li><li>Revisa toda la estructura: ninguna unión debe quedar a medias.</li></ol></div><div class="d"><img src="img/fase4.jpg" alt="Estructura completa con la cúpula"></div></div>
+          <div class="step"><div class="n">05</div><div class="c"><span class="label">Fase 5</span><h3>Lona superior</h3><ol><li>Despliega la lona desde la cúpula hacia abajo.</li><li>Alinea la puerta y la ventana con la estructura.</li><li>Asegúrate de que todo calce en su sitio.</li></ol></div><div class="d"><img src="img/domo.jpg" alt="Domo cubierto con la lona superior" style="object-fit:cover;padding:0;max-height:none"></div></div>
+          <div class="step"><div class="n">06</div><div class="c"><span class="label">Fase 6 · opcional</span><h3>Anclaje</h3><ol><li>En tierra: estacas.</li><li>En superficie dura: peso o sacos.</li><li>Con viento fuerte: amarre a puntos fijos.</li></ol></div><div class="d empty"></div></div>
+        </div>
+        <div class="notes pad">
+          <div><span class="label">Advertencias</span><ul><li>No usar cerca del fuego.</li><li>No modificar la longitud de los tubos.</li><li>Revisar la tensión de la lona después de lluvia o viento.</li></ul></div>
+          <div><span class="label">Para desarmar</span><ul><li>Para separar un nodo, gira el tubo mientras tiras.</li><li>No hagas palanca sobre los nodos.</li></ul></div>
+        </div>
+      </div>
+
+      <!-- proceso -->
+      <div class="block">
+        <div class="sec-head pad">
+          <span class="label">Proceso de creación</span>
+          <div><h2>De un boceto a un refugio.</h2></div>
+        </div>
+        <div class="proc">
+          <figure><img class="contain" src="img/boceto.jpg" alt="Boceto a mano de los nodos con brazos numerados"><div class="t"><span class="label">01 · Diseño</span><b>Planos y diseño</b><span>El nodo se dibuja a mano, cada brazo recibe un número o una P; luego se modela en Rhino y se exporta en STL.</span></div></figure>
+          <figure><img src="img/nodos-detalle.jpg" alt="Detalle de nodos naranjas uniendo los tubos"><div class="t"><span class="label">02 · Estructura</span><b>Esqueleto de tubos</b><span>Los tubos se encajan a presión siguiendo la numeración. Cada pieza tiene su lugar.</span></div></figure>
+          <figure><img src="img/corte.jpg" alt="Lona extendida sobre la mesa para el corte"><div class="t"><span class="label">03 · Piel</span><b>Corte y prueba de la lona</b><span>La lona se traza y se corta por paños. Se probaron versiones, como una de interior negro, hasta llegar a la final.</span></div></figure>
+          <figure><img src="img/piel.jpg" alt="Prueba de piel de interior negro sobre la estructura"><div class="t"><span class="label">04 · Montaje</span><b>Ajuste final</b><span>Los paños se colocan, se tensan y se ajustan uno a uno. Al final se alinean la puerta y la ventana.</span></div></figure>
+        </div>
+      </div>
+
+      <!-- open source -->
+      <div class="block">
+        <div class="sec-head pad">
+          <span class="label">Open Source</span>
+          <div><h2>Libre y comunitario.</h2><p class="lead">Cualquier persona en el mundo puede construirlo con tres cosas.</p></div>
+        </div>
+        <div class="open">
+          <div class="list">
+            <div class="item"><span class="k">01</span><div><b>Impresora 3D</b><span>Para fabricar los nodos.</span></div></div>
+            <div class="item"><span class="k">02</span><div><b>Tubos de PVC de 1/2"</b><span>Para el esqueleto.</span></div></div>
+            <div class="item"><span class="k">03</span><div><b>Lonas recicladas</b><span>Lonas publicitarias para la piel.</span></div></div>
+          </div>
+          <div class="cost"><span class="label">Cada kit cuesta</span><span class="big">1/3</span><p>del costo de un refugio provisional.</p></div>
+        </div>
+        <div class="files">
+          <div class="file"><span class="label">Archivos</span><b>Nodos en STL y ajustes de impresión</b><span class="state">Enlace próximamente</span></div>
+          <div class="file"><span class="label">Archivos</span><b>Patrones y materiales de la lona</b><span class="state">Enlace próximamente</span></div>
+          <div class="file"><span class="label">Archivos</span><b>Manual de armado en PDF</b><span class="state">Enlace próximamente</span></div>
+        </div>
+      </div>
+
+      <div class="join pad block">
+        <span class="label">Únete</span>
+        <h2>Hoy buscamos aliados, insumos y financiamiento.</h2>
+        <p>Para llevar esta respuesta digna a miles de familias.</p>
+        <div class="chips"><span>Aliados</span><span>Insumos</span><span>Financiamiento</span></div>
+      </div>
+    </section>
+
+    <!-- ================= FERULAS ================= -->
+    <section class="view" id="v-ferulas" aria-label="Férulas" hidden>
+      <div class="topbar pad label"><div class="who"><span class="dot" style="background:var(--c-felulas)"></span><span>Férulas</span></div><span>Impresión 3D</span></div>
+      <div class="f-hero block">
+        <div class="soon-wrap pad" style="border-bottom:0">
+        <span class="label">Impresión 3D</span>
+        <h1>Férulas</h1>
+        <p>Estas férulas se desarrollaron pensando en aquellas que no se consiguen tan fácilmente. Aquí están los archivos libres para imprimir en 3D un collarín y férulas de rodilla y de tobillo, con sus parámetros de impresión.</p>
+        <a class="back" href="https://drive.google.com/drive/folders/17VQVTizafzs-lhrFRmx-J47O9_sEjaYL" target="_blank" rel="noopener">Abrir la carpeta en Drive <span aria-hidden="true">↗</span></a>
+      </div>
+        <figure class="f-photo"><img src="img/ferula-tobillo.jpg" alt="Férula de tobillo amarilla impresa en 3D, con correas beige, puesta en un pie"></figure>
+      </div>
+      <div class="flist">
+        <a class="frow" href="https://drive.google.com/drive/folders/1sAbP8l9YYMP3o8TN-QFnKCCcRdOALi9J" target="_blank" rel="noopener"><span class="k">01</span><span class="t"><b>Collarín</b><span class="label">Carpeta</span></span><span class="go" aria-hidden="true">↗</span></a>
+        <a class="frow" href="https://drive.google.com/drive/folders/1I-DWbMfR7hkJ5Hp8p71vJLfQmh5GqnOt" target="_blank" rel="noopener"><span class="k">02</span><span class="t"><b>Férula de rodilla</b><span class="label">Carpeta</span></span><span class="go" aria-hidden="true">↗</span></a>
+        <a class="frow" href="https://drive.google.com/drive/folders/1Td5W3Rop1xatqleeYOq3G88zA75IrP5O" target="_blank" rel="noopener"><span class="k">03</span><span class="t"><b>Férula de tobillo</b><span class="label">Carpeta</span></span><span class="go" aria-hidden="true">↗</span></a>
+        <a class="frow" href="https://drive.google.com/drive/folders/17VQVTizafzs-lhrFRmx-J47O9_sEjaYL" target="_blank" rel="noopener"><span class="k">04</span><span class="t"><b>Parámetros de impresión</b><span class="label">Imagen PNG</span></span><span class="go" aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <!-- ================= INFOGRAFÍAS ================= -->
+    <section class="view" id="v-infografias" aria-label="Infografías" hidden>
+      <div class="topbar pad label"><div class="who"><span class="dot" style="background:var(--c-info)"></span><span>Infografías</span></div><span>03</span></div>
+      <div class="f-hero block">
+        <div class="soon-wrap pad" style="border-bottom:0">
+        <span class="label">Campañas del terremoto · IDC</span>
+        <h1>Infografías</h1>
+        <p>Piezas visuales que vuelven sencillos los datos y procesos complejos, pensadas para compartirse en redes sociales o imprimirse localmente.</p>
+        <a class="back" href="https://drive.google.com/drive/folders/1CIuZUt1b1Y-H0IJ4YWP8exRSO4G68sX1" target="_blank" rel="noopener">Abrir las infografías en Drive <span aria-hidden="true">↗</span></a>
+      </div>
+        <figure class="f-photo"><img src="img/infografia-aplastamiento.jpg" alt="Infografía «Síndrome de aplastamiento: lo que no debes hacer», impresa como afiche"></figure>
+      </div>
+    </section>
+    <footer class="site-foot pad"><span>Diseñado por estudiantes y profesores del Instituto de Diseño de Caracas</span><span>2026</span></footer>
+  </main>
+</div>
+
+<script>
+(function(){
+  var views=['inicio','nidomo','ferulas','infografias'];
+  function show(){
+    var h=(location.hash||'').replace('#','');
+    if(views.indexOf(h)<0) h='inicio';
+    views.forEach(function(v){document.getElementById('v-'+v).hidden=(v!==h);});
+    document.querySelectorAll('nav a').forEach(function(a){
+      if(a.getAttribute('data-view')===h) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+    });
+  }
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href^="#"]'); if(!a) return;
+    e.preventDefault();
+    var id=a.getAttribute('href').slice(1);
+    try{history.replaceState(null,'','#'+id);}catch(err){location.hash=id;}
+    show(); window.scrollTo(0,0);
+  });
+  window.addEventListener('hashchange',show);
+  show();
+})();
+</script>
+
+</body></html>
